@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Test AR · Maidi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0A0A12;font-family:system-ui,sans-serif;height:100dvh;display:flex;flex-direction:column;color:white;overflow:hidden}
+#topbar{padding:8px 12px;font-size:10px;color:rgba(255,255,255,0.4);background:rgba(10,20,40,0.95);border-bottom:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+#controls{display:flex;gap:6px;padding:8px 12px;flex-wrap:wrap;align-items:center;flex-shrink:0;background:rgba(10,20,40,0.9);border-bottom:1px solid rgba(255,255,255,0.07)}
+#controls button{padding:5px 11px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.07);color:white;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s}
+#controls button.active{border-color:var(--pc);background:var(--pc);color:#000}
+#view{flex:1;position:relative;overflow:hidden}
+canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#video{display:none}
+#idle{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;z-index:10}
+#idle h2{font-size:19px;font-weight:700;color:#C9A84C}
+#idle p{font-size:12px;color:rgba(255,255,255,0.5);text-align:center;line-height:1.7;max-width:290px}
+#startBtn{padding:14px 36px;border-radius:14px;border:none;cursor:pointer;background:linear-gradient(135deg,#BF4342,#8B2020);color:white;font-size:14px;font-weight:700;box-shadow:0 4px 20px #BF434244}
+#log{position:absolute;top:8px;left:8px;right:8px;background:rgba(0,0,0,0.75);padding:7px 10px;border-radius:8px;font-size:10px;color:#4CF;max-height:90px;overflow-y:auto;font-family:monospace;z-index:20;pointer-events:none;backdrop-filter:blur(4px)}
+#loadingPose{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:15;background:rgba(0,0,0,0.7)}
+#loadingPose .spinner{width:40px;height:40px;border:3px solid rgba(201,168,76,0.2);border-top:3px solid #C9A84C;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#infopanel{position:absolute;bottom:0;left:0;right:0;background:rgba(10,20,40,0.92);padding:12px 16px;z-index:10;border-top:1px solid rgba(201,168,76,0.2);transform:translateY(100%);transition:transform .3s}
+#infopanel.show{transform:translateY(0)}
+#infopanel h3{font-size:15px;font-weight:700;color:#C9A84C;margin-bottom:4px}
+#infopanel p{font-size:11px;color:rgba(255,255,255,0.6);line-height:1.6}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <span>📍 AR Test · Maidi <span id="poseStatus" style="color:#888">· MediaPipe: cargando…</span></span>
+  <span id="apiStatus" style="color:#888">getUserMedia: ?</span>
+</div>
+
+<div id="controls">
+  <span style="font-size:10px;color:rgba(255,255,255,0.4)">Punto:</span>
+  <button onclick="setPunto('ST36')" id="btn-ST36" style="--pc:#C8A050" class="active">ST36</button>
+  <button onclick="setPunto('LI4')"  id="btn-LI4"  style="--pc:#5A8A5A">LI4</button>
+  <button onclick="setPunto('PC6')"  id="btn-PC6"  style="--pc:#6B7FA3">PC6</button>
+  <button onclick="setPunto('SP6')"  id="btn-SP6"  style="--pc:#8A6BB5">SP6</button>
+  <button onclick="setPunto('GV20')" id="btn-GV20" style="--pc:#BF4342">GV20</button>
+  <button onclick="setPunto('BL40')" id="btn-BL40" style="--pc:#5A8AB0">BL40</button>
+  <button onclick="flipCam()" style="margin-left:auto;border-color:rgba(255,255,255,0.3)">🔄</button>
+</div>
+
+<div id="view">
+  <div id="idle">
+    <h2>📍 Test AR · Maidi</h2>
+    <p>Detección corporal con <strong style="color:#C9A84C">MediaPipe Pose</strong>.<br>
+    Funciona en tiempo real en el dispositivo.<br>
+    Necesita HTTPS (GitHub Pages).</p>
+    <button id="startBtn" onclick="init()">Activar cámara →</button>
+  </div>
+
+  <div id="loadingPose">
+    <div class="spinner"></div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.6)">Cargando MediaPipe Pose…</div>
+    <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:4px">Primera carga: ~5 MB</div>
+  </div>
+
+  <video id="video" playsinline muted></video>
+  <canvas id="camCanvas"></canvas>
+  <canvas id="arCanvas"></canvas>
+
+  <div id="infopanel">
+    <h3 id="panelTitle">ST36</h3>
+    <p id="panelDesc"></p>
+  </div>
+
+  <div id="log"></div>
+</div>
+
+<!-- MediaPipe via CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+
+<script>
+// ── Datos de puntos: landmark indices + offset relativo ─────────────────────
+// MediaPipe Pose landmarks: https://developers.google.com/mediapipe/solutions/vision/pose_landmarker
+// 0=nose, 11=L-shoulder, 12=R-shoulder, 13=L-elbow, 14=R-elbow,
+// 15=L-wrist, 16=R-wrist, 23=L-hip, 24=R-hip,
+// 25=L-knee, 26=R-knee, 27=L-ankle, 28=R-ankle
+
+const PUNTOS = {
+  ST36: {
+    nombre:'Zusanli', zona:'Pierna anterior', ref:'4 dedos bajo rótula',
+    instruccion:'4 dedos bajo el borde inferior de la rótula, 1 dedo lateral a la cresta tibial',
+    color:'#C8A050',
+    // Entre rodilla (25) y tobillo (27): 20% desde rodilla, ligeramente lateral
+    calc: (lm) => interpLateral(lm[25], lm[27], 0.20, 0.04)
+  },
+  LI4: {
+    nombre:'Hegu', zona:'Mano — dorso', ref:'Entre 1º-2º metacarpiano',
+    instruccion:'En el punto más alto de la musculatura al juntar pulgar e índice, dorso de la mano',
+    color:'#5A8A5A',
+    // Muñeca (15) hacia el exterior: punto en la mano
+    calc: (lm) => interpLateral(lm[15], lm[13], -0.15, 0.06)
+  },
+  PC6: {
+    nombre:'Neiguan', zona:'Antebrazo anterior', ref:'2 cun sobre muñeca',
+    instruccion:'2 cun (3 dedos) sobre el pliegue de la muñeca entre los tendones',
+    color:'#6B7FA3',
+    // Entre muñeca (15) y codo (13): 25% desde muñeca
+    calc: (lm) => interp(lm[15], lm[13], 0.25)
+  },
+  SP6: {
+    nombre:'Sanyinjiao', zona:'Pierna medial', ref:'3 cun sobre maléolo',
+    instruccion:'4 dedos sobre el vértice del maléolo interno, borde posterior de la tibia',
+    color:'#8A6BB5',
+    // Entre tobillo (27) y rodilla (25): 22% desde tobillo, medial
+    calc: (lm) => interpLateral(lm[27], lm[25], 0.22, -0.04)
+  },
+  GV20: {
+    nombre:'Baihui', zona:'Vértex craneal', ref:'Cruce línea sagital-auricular',
+    instruccion:'Cruce de la línea sagital media con la línea que une los ápices de ambas orejas',
+    color:'#BF4342',
+    // Por encima de la nariz (0), en la línea media
+    calc: (lm) => ({ x: lm[0].x, y: lm[0].y - 0.12, z: lm[0].z, visibility: lm[0].visibility })
+  },
+  BL40: {
+    nombre:'Weizhong', zona:'Pliegue poplíteo', ref:'Centro del pliegue posterior',
+    instruccion:'En el centro del pliegue poplíteo, entre los tendones del bíceps femoral y semimembranoso',
+    color:'#5A8AB0',
+    // Centro del pliegue posterior: entre rodilla (25/26) — usamos rodilla directamente
+    calc: (lm) => interp(lm[25], lm[27], 0.02)
+  },
+};
+
+// Helpers de interpolación
+function interp(a, b, t) {
+  return { x: a.x + (b.x-a.x)*t, y: a.y + (b.y-a.y)*t, z: (a.z+b.z)/2, visibility: Math.min(a.visibility||0, b.visibility||0) };
+}
+function interpLateral(a, b, t, lateral) {
+  const dx = b.x - a.x, dy = b.y - a.y;
+  const len = Math.sqrt(dx*dx+dy*dy) || 0.001;
+  return {
+    x: a.x + dx*t + (-dy/len)*lateral,
+    y: a.y + dy*t + (dx/len)*lateral,
+    z: (a.z+b.z)/2,
+    visibility: Math.min(a.visibility||0, b.visibility||0)
+  };
+}
+
+// ── Estado ───────────────────────────────────────────────────────────────────
+let selPunto = 'ST36';
+let camFacing = 'environment';
+let pose = null;
+let camUtil = null;
+let lastLandmarks = null;
+let poseReady = false;
+let streamActive = false;
+
+const video    = document.getElementById('video');
+const camCvs   = document.getElementById('camCanvas');
+const arCvs    = document.getElementById('arCanvas');
+const camCtx   = camCvs.getContext('2d');
+const arCtx    = arCvs.getContext('2d');
+const logEl    = document.getElementById('log');
+
+// ── Log ───────────────────────────────────────────────────────────────────────
+function log(msg, color) {
+  const t = new Date().toLocaleTimeString('es',{hour12:false});
+  logEl.innerHTML += `<div style="color:${color||'#4CF'}">[${t}] ${msg}</div>`;
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+// ── API check ─────────────────────────────────────────────────────────────────
+if (navigator.mediaDevices?.getUserMedia) {
+  document.getElementById('apiStatus').textContent = '✅ getUserMedia';
+  document.getElementById('apiStatus').style.color = '#4F4';
+} else {
+  document.getElementById('apiStatus').textContent = '❌ Sin soporte';
+  document.getElementById('apiStatus').style.color = '#F44';
+}
+
+// ── Punto selector ────────────────────────────────────────────────────────────
+function setPunto(id) {
+  selPunto = id;
+  document.querySelectorAll('#controls button[id^="btn-"]').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-'+id)?.classList.add('active');
+  const p = PUNTOS[id];
+  document.getElementById('panelTitle').textContent = id + ' · ' + p.nombre;
+  document.getElementById('panelDesc').textContent = p.instruccion;
+  document.getElementById('infopanel').classList.add('show');
+  setTimeout(()=>document.getElementById('infopanel').classList.remove('show'), 3500);
+  log('Punto: '+id+' — '+p.nombre);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init() {
+  document.getElementById('idle').style.display = 'none';
+  document.getElementById('loadingPose').style.display = 'flex';
+  log('Iniciando cámara…');
+
+  try {
+    // 1. Cámara
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: camFacing, width:{ideal:640}, height:{ideal:480} },
+      audio: false
+    });
+    video.srcObject = stream;
+    await video.play();
+    streamActive = true;
+    const t = stream.getVideoTracks()[0].getSettings();
+    log(`✅ Cámara: ${t.width}×${t.height} @ ${t.frameRate||'?'}fps`);
+
+    // 2. MediaPipe Pose
+    log('Cargando MediaPipe Pose…');
+    pose = new Pose({
+      locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${f}`
+    });
+    pose.setOptions({
+      modelComplexity: 1,
+      smoothLandmarks: true,
+      enableSegmentation: false,
+      smoothSegmentation: false,
+      minDetectionConfidence: 0.5,
+      minTrackingConfidence: 0.5
+    });
+    pose.onResults(onPoseResults);
+
+    document.getElementById('poseStatus').textContent = '· MediaPipe: listo ✅';
+    document.getElementById('poseStatus').style.color = '#4F4';
+    poseReady = true;
+    log('✅ MediaPipe Pose cargado', '#4F4');
+
+    document.getElementById('loadingPose').style.display = 'none';
+
+    // 3. Camera utility loop
+    camUtil = new Camera(video, {
+      onFrame: async () => {
+        if (poseReady) await pose.send({ image: video });
+      },
+      width: 640, height: 480
+    });
+    camUtil.start();
+    log('▶ Loop de detección activo', '#4F4');
+
+    // Mostrar panel del punto inicial
+    setPunto(selPunto);
+
+  } catch(e) {
+    document.getElementById('loadingPose').style.display = 'none';
+    document.getElementById('idle').style.display = 'flex';
+    log(`❌ ${e.name}: ${e.message}`, '#F66');
+    if (e.name === 'NotAllowedError') {
+      log('→ Necesitas HTTPS y conceder permiso de cámara', '#FA0');
+    }
+  }
+}
+
+// ── MediaPipe callback ────────────────────────────────────────────────────────
+function onPoseResults(results) {
+  const w = results.image.width  || video.videoWidth  || 640;
+  const h = results.image.height || video.videoHeight || 480;
+
+  camCvs.width = arCvs.width  = w;
+  camCvs.height = arCvs.height = h;
+
+  // Dibuja frame de cámara
+  camCtx.drawImage(results.image, 0, 0, w, h);
+
+  // Limpiar canvas AR
+  arCtx.clearRect(0, 0, w, h);
+
+  if (!results.poseLandmarks) {
+    drawGuide(w, h);
+    return;
+  }
+
+  lastLandmarks = results.poseLandmarks;
+  const lm = lastLandmarks;
+  const p  = PUNTOS[selPunto];
+
+  // Dibuja esqueleto tenue
+  drawSkeleton(lm, w, h);
+
+  // Calcula posición del punto
+  try {
+    const pt = p.calc(lm);
+    const vis = pt.visibility || 0;
+
+    if (vis > 0.3) {
+      const px = pt.x * w;
+      const py = pt.y * h;
+      drawARPoint(px, py, p.color, selPunto, vis);
+    } else {
+      drawGuide(w, h);
+      drawLowVisWarning(w, h);
+    }
+  } catch(e) {
+    drawGuide(w, h);
+  }
+}
+
+// ── Dibuja punto AR ──────────────────────────────────────────────────────────
+function drawARPoint(px, py, color, label, visibility) {
+  const pulse = Math.sin(Date.now()/350) * 4;
+  const alpha = Math.min(1, visibility * 1.5);
+
+  // Halo exterior
+  arCtx.strokeStyle = color + Math.round(alpha * 80).toString(16).padStart(2,'0');
+  arCtx.lineWidth = 2;
+  arCtx.setLineDash([5,4]);
+  arCtx.beginPath();
+  arCtx.arc(px, py, 28+pulse, 0, Math.PI*2);
+  arCtx.stroke();
+  arCtx.setLineDash([]);
+
+  // Líneas cruzadas
+  arCtx.strokeStyle = `rgba(255,255,255,${alpha*0.85})`;
+  arCtx.lineWidth = 1.5;
+  [[-16,0,16,0],[0,-16,0,16]].forEach(([x1,y1,x2,y2])=>{
+    arCtx.beginPath();
+    arCtx.moveTo(px+x1, py+y1);
+    arCtx.lineTo(px+x2, py+y2);
+    arCtx.stroke();
+  });
+
+  // Círculo principal pulsante
+  arCtx.fillStyle = color + 'DD';
+  arCtx.beginPath();
+  arCtx.arc(px, py, 9+pulse, 0, Math.PI*2);
+  arCtx.fill();
+  arCtx.strokeStyle = 'white';
+  arCtx.lineWidth = 2;
+  arCtx.beginPath();
+  arCtx.arc(px, py, 9+pulse, 0, Math.PI*2);
+  arCtx.stroke();
+
+  // Etiqueta con fondo
+  arCtx.font = 'bold 13px system-ui';
+  arCtx.textAlign = 'center';
+  const lw = arCtx.measureText(label).width + 18;
+  arCtx.fillStyle = 'rgba(0,0,0,0.75)';
+  roundRect(arCtx, px-lw/2, py-44, lw, 22, 5);
+  arCtx.fill();
+  arCtx.fillStyle = 'white';
+  arCtx.fillText(label, px, py-28);
+
+  // Barra de confianza
+  const barW = 50, barH = 5;
+  arCtx.fillStyle = 'rgba(0,0,0,0.5)';
+  arCtx.fillRect(px-barW/2, py+18, barW, barH);
+  arCtx.fillStyle = visibility > 0.7 ? '#4F4' : visibility > 0.5 ? '#FA0' : '#F44';
+  arCtx.fillRect(px-barW/2, py+18, barW*visibility, barH);
+}
+
+// ── Esqueleto tenue ──────────────────────────────────────────────────────────
+const CONNECTIONS = [
+  [11,12],[11,13],[13,15],[12,14],[14,16],
+  [11,23],[12,24],[23,24],
+  [23,25],[25,27],[24,26],[26,28],
+  [27,31],[28,32]
+];
+function drawSkeleton(lm, w, h) {
+  arCtx.strokeStyle = 'rgba(255,255,255,0.15)';
+  arCtx.lineWidth = 1.5;
+  CONNECTIONS.forEach(([a,b])=>{
+    if (!lm[a] || !lm[b]) return;
+    if ((lm[a].visibility||0) < 0.3 || (lm[b].visibility||0) < 0.3) return;
+    arCtx.beginPath();
+    arCtx.moveTo(lm[a].x*w, lm[a].y*h);
+    arCtx.lineTo(lm[b].x*w, lm[b].y*h);
+    arCtx.stroke();
+  });
+  // Puntos articulares tenues
+  [11,12,13,14,15,16,23,24,25,26,27,28].forEach(i=>{
+    if (!lm[i] || (lm[i].visibility||0) < 0.3) return;
+    arCtx.fillStyle = 'rgba(255,255,255,0.25)';
+    arCtx.beginPath();
+    arCtx.arc(lm[i].x*w, lm[i].y*h, 4, 0, Math.PI*2);
+    arCtx.fill();
+  });
+}
+
+// ── Guía cuando no hay detección ─────────────────────────────────────────────
+function drawGuide(w, h) {
+  const cx=w/2, cy=h/2;
+  const p = PUNTOS[selPunto];
+  const pulse = Math.sin(Date.now()/500)*3;
+  arCtx.strokeStyle = p.color + '88';
+  arCtx.lineWidth = 2;
+  arCtx.setLineDash([6,4]);
+  arCtx.beginPath(); arCtx.arc(cx,cy,40+pulse,0,Math.PI*2); arCtx.stroke();
+  arCtx.setLineDash([]);
+  arCtx.fillStyle = 'rgba(0,0,0,0.6)';
+  const msg = 'Apunta la cámara a tu ' + PUNTOS[selPunto].zona;
+  const mw = arCtx.measureText ? (() => { arCtx.font='12px system-ui'; return arCtx.measureText(msg).width+20; })() : 200;
+  arCtx.fillRect(w/2-mw/2, cy+52, mw, 22);
+  arCtx.fillStyle='white'; arCtx.font='12px system-ui'; arCtx.textAlign='center';
+  arCtx.fillText(msg, cx, cy+67);
+}
+
+function drawLowVisWarning(w, h) {
+  arCtx.fillStyle='rgba(0,0,0,0.55)';
+  const msg = '⚠ Zona no visible — ajusta el encuadre';
+  arCtx.font='11px system-ui'; arCtx.textAlign='center';
+  const mw = arCtx.measureText(msg).width+18;
+  arCtx.fillRect(w/2-mw/2, h-38, mw, 22);
+  arCtx.fillStyle='#FA0';
+  arCtx.fillText(msg, w/2, h-23);
+}
+
+// ── Flip cámara ───────────────────────────────────────────────────────────────
+async function flipCam() {
+  camFacing = camFacing==='environment'?'user':'environment';
+  log('Flip → '+camFacing);
+  if (camUtil) { camUtil.stop(); camUtil=null; }
+  if (video.srcObject) { video.srcObject.getTracks().forEach(t=>t.stop()); video.srcObject=null; }
+  streamActive = false;
+  await init();
+}
+
+// ── Utilidad roundRect ────────────────────────────────────────────────────────
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.lineTo(x+w-r, y);
+  ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+  ctx.lineTo(x+w, y+h-r);
+  ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+  ctx.lineTo(x+r, y+h);
+  ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+  ctx.lineTo(x, y+r);
+  ctx.quadraticCurveTo(x, y, x+r, y);
+  ctx.closePath();
+}
+
+// Init panel
+setPunto('ST36');
+document.getElementById('infopanel').classList.remove('show');
+</script>
+</body>
+</html>
