@@ -1,30 +1,39 @@
-<div id="brazo-maestro-container" style="background:#020617; padding:30px; border-radius:20px; text-align:center; max-width:500px; margin:auto; border: 1px solid rgba(45, 212, 191, 0.2);">
-    <h4 class="ancient" style="color:white; margin-bottom:15px; font-family:'Cinzel', serif; letter-spacing:3px;">Validación: Miembro Superior</h4>
-    <p style="color:#64748b; font-size:10px; text-transform:uppercase; margin-bottom:20px;">Referencia: Estándar Internacional OMS / Deadman</p>
+<div id="brazo-maestro-container" style="background:#020617; padding:25px; border-radius:20px; text-align:center; max-width:500px; margin:auto; border: 1px solid rgba(45, 212, 191, 0.3);">
+    <h4 class="ancient" style="color:white; margin-bottom:10px; font-family:'Cinzel', serif; letter-spacing:2px;">Mapa de Precisión: Mano y Antebrazo</h4>
     
-    <div style="position:relative; width:100%; height:350px;">
-        <svg viewBox="0 0 400 300" style="width:100%; height:100%;">
-            <path d="M50,50 Q70,40 100,45 T150,55 L280,70 Q310,75 330,90 L350,110 L345,130 L320,135 L200,140 L100,150 Q70,155 50,140 Z" 
-                  fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" />
+    <div style="position:relative; width:100%; height:400px;">
+        <svg viewBox="0 0 300 500" style="width:100%; height:100%;">
+            <path d="M100,50 C130,50 140,80 145,150 L155,300 
+                     C155,310 165,320 180,330 
+                     L185,390 C187,410 175,415 170,395 L165,340 
+                     L160,430 C160,450 148,450 148,430 L145,345 
+                     L135,440 C135,460 123,460 123,440 L123,345 
+                     L110,430 C110,450 98,450 98,430 L102,340 
+                     L85,370 C75,385 65,375 75,355 L100,310 
+                     L90,300 L75,150 C80,80 85,50 100,50" 
+                  fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" />
             
-            <circle cx="95" cy="45" r="2" fill="#475569" /> <circle cx="150" cy="100" r="2" fill="#475569" /> <circle cx="300" cy="115" r="2" fill="#475569" /> <path id="path-P" d="M100,60 C140,75 220,95 300,110 L330,105" 
-                  fill="none" stroke="#2dd4bf" stroke-width="2" opacity="0.9" />
+            <path id="P-real" d="M100,60 C110,150 115,250 105,310 L85,355" 
+                  fill="none" stroke="#2dd4bf" stroke-width="2" filter="drop-shadow(0 0 3px #2dd4bf)" />
             
-            <path id="path-PC" d="M100,85 C150,100 230,115 300,125 L340,125" 
-                  fill="none" stroke="#f43f5e" stroke-width="2" opacity="0.9" />
+            <path id="PC-real" d="M115,60 C125,150 130,250 130,320 L130,440" 
+                  fill="none" stroke="#f43f5e" stroke-width="2" filter="drop-shadow(0 0 3px #f43f5e)" />
 
-            <path id="path-C" d="M100,110 C150,125 230,135 300,140 L335,145" 
-                  fill="none" stroke="#fbbf24" stroke-width="2" opacity="0.9" />
+            <path id="C-real" d="M130,60 C140,150 145,250 150,320 L153,425" 
+                  fill="none" stroke="#fbbf24" stroke-width="2" filter="drop-shadow(0 0 3px #fbbf24)" />
 
-            <text x="355" y="105" fill="#2dd4bf" font-size="9" font-family="sans-serif">P (Metal)</text>
-            <text x="355" y="128" fill="#f43f5e" font-size="9" font-family="sans-serif">PC (Fuego)</text>
-            <text x="355" y="150" fill="#fbbf24" font-size="9" font-family="sans-serif">C (Fuego)</text>
-            
-            <circle cx="300" cy="110" r="3" fill="white" style="filter: drop-shadow(0 0 3px #fff);" /> <circle cx="300" cy="125" r="3" fill="white" style="filter: drop-shadow(0 0 3px #fff);" /> <circle cx="300" cy="140" r="3" fill="white" style="filter: drop-shadow(0 0 3px #fff);" /> </svg>
+            <circle cx="85" cy="355" r="3" fill="#fff" /> <circle cx="130" cy="440" r="3" fill="#fff" /> <circle cx="153" cy="425" r="3" fill="#fff" /> <circle cx="108" cy="325" r="3" fill="#fff" opacity="0.6" /> <circle cx="130" cy="335" r="3" fill="#fff" opacity="0.6" /> <circle cx="148" cy="342" r="3" fill="#fff" opacity="0.6" /> <text x="50" y="480" fill="#2dd4bf" font-size="10">P11 (Pulgar)</text>
+            <text x="110" y="495" fill="#f43f5e" font-size="10">PC9 (Corazón)</text>
+            <text x="175" y="480" fill="#fbbf24" font-size="10">C9 (Meñique)</text>
+        </svg>
     </div>
 
-    <div style="background:rgba(15, 23, 42, 0.8); padding:10px; border-radius:10px; margin-top:10px;">
-        <p style="color:#2dd4bf; font-size:10px; text-align:left; line-height:1.4;">
-            <i class="fas fa-info-circle"></i> <b>Nota de Diseño:</b> Las líneas siguen los canales de los tejidos blandos. Se han ubicado los puntos 7 de cada meridiano justo proximal al pliegue de la muñeca, respetando la anatomía de superficie.
+    <div style="background:rgba(45, 212, 191, 0.05); padding:12px; border-radius:12px; margin-top:15px; border:1px solid rgba(45, 212, 191, 0.2);">
+        <p style="color:#f1f5f9; font-size:11px; text-align:left; line-height:1.5;">
+            <b>Revisión de Precisión:</b><br>
+            • <b>P (Cian):</b> Termina en el borde radial del pulgar.<br>
+            • <b>PC (Rojo):</b> Centro de la palma hasta el extremo del 3er dedo.<br>
+            • <b>C (Oro):</b> Cara interna del brazo hasta el ángulo ungueal del meñique.
         </p>
     </div>
+</div>
