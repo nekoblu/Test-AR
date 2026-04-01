@@ -1,37 +1,30 @@
-<div id="maniqui-container" style="background:#020617; padding:40px; border-radius:30px; text-align:center; max-width:400px; margin:auto;">
-    <h3 class="ancient" style="color:white; margin-bottom:20px; font-family:'Cinzel', serif;">Cuerpo de Luz</h3>
+<div id="brazo-maestro-container" style="background:#020617; padding:30px; border-radius:20px; text-align:center; max-width:500px; margin:auto; border: 1px solid rgba(45, 212, 191, 0.2);">
+    <h4 class="ancient" style="color:white; margin-bottom:15px; font-family:'Cinzel', serif; letter-spacing:3px;">Validación: Miembro Superior</h4>
+    <p style="color:#64748b; font-size:10px; text-transform:uppercase; margin-bottom:20px;">Referencia: Estándar Internacional OMS / Deadman</p>
     
-    <div style="position:relative; width:220px; height:450px; margin:auto;">
-        <svg viewBox="0 0 200 500" style="width:100%; height:100%;">
-            <defs>
-                <filter id="glow">
-                    <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
-                    <feMerge>
-                        <feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/>
-                    </feMerge>
-                </filter>
-            </defs>
+    <div style="position:relative; width:100%; height:350px;">
+        <svg viewBox="0 0 400 300" style="width:100%; height:100%;">
+            <path d="M50,50 Q70,40 100,45 T150,55 L280,70 Q310,75 330,90 L350,110 L345,130 L320,135 L200,140 L100,150 Q70,155 50,140 Z" 
+                  fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" />
+            
+            <circle cx="95" cy="45" r="2" fill="#475569" /> <circle cx="150" cy="100" r="2" fill="#475569" /> <circle cx="300" cy="115" r="2" fill="#475569" /> <path id="path-P" d="M100,60 C140,75 220,95 300,110 L330,105" 
+                  fill="none" stroke="#2dd4bf" stroke-width="2" opacity="0.9" />
+            
+            <path id="path-PC" d="M100,85 C150,100 230,115 300,125 L340,125" 
+                  fill="none" stroke="#f43f5e" stroke-width="2" opacity="0.9" />
 
-            <path d="M100,40 C115,40 125,50 125,75 C125,110 115,125 100,125 C85,125 75,110 75,75 C75,50 85,40 100,40 M75,95 L40,180 L55,460 M125,95 L160,180 L145,460 M90,125 L85,480 M110,125 L115,480" 
-                  fill="none" stroke="rgba(45, 212, 191, 0.15)" stroke-width="1.5" />
+            <path id="path-C" d="M100,110 C150,125 230,135 300,140 L335,145" 
+                  fill="none" stroke="#fbbf24" stroke-width="2" opacity="0.9" />
 
-            <path id="m-pulmon" d="M100,140 L80,160 L70,220 L50,280" 
-                  fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2" stroke-linecap="round" />
-
-            <path id="m-estomago" d="M115,80 L115,180 L125,300 L130,450" 
-                  fill="none" stroke="#2dd4bf" stroke-width="1.5" opacity="0.4" stroke-dasharray="5,5">
-                  <animate attributeName="stroke-dashoffset" from="100" to="0" dur="5s" repeatCount="indefinite" />
-            </path>
-
-            <path id="m-higado" d="M100,480 L110,400 L95,320 L85,250 L100,180" 
-                  fill="none" stroke="#2dd4bf" stroke-width="2.5" filter="url(#glow)" style="filter: drop-shadow(0 0 8px #2dd4bf);">
-                  <animate attributeName="opacity" values="0.6;1;0.6" dur="3s" repeatCount="indefinite" />
-            </path>
-
-            <circle cx="50" cy="280" r="3" fill="#fff" shadow="0 0 10px white" /> <circle cx="100" cy="180" r="4" fill="#fbbf24" style="filter: drop-shadow(0 0 5px #fbbf24);" /> </svg>
+            <text x="355" y="105" fill="#2dd4bf" font-size="9" font-family="sans-serif">P (Metal)</text>
+            <text x="355" y="128" fill="#f43f5e" font-size="9" font-family="sans-serif">PC (Fuego)</text>
+            <text x="355" y="150" fill="#fbbf24" font-size="9" font-family="sans-serif">C (Fuego)</text>
+            
+            <circle cx="300" cy="110" r="3" fill="white" style="filter: drop-shadow(0 0 3px #fff);" /> <circle cx="300" cy="125" r="3" fill="white" style="filter: drop-shadow(0 0 3px #fff);" /> <circle cx="300" cy="140" r="3" fill="white" style="filter: drop-shadow(0 0 3px #fff);" /> </svg>
     </div>
 
-    <div style="margin-top:20px; font-family:sans-serif; color:#94a3b8; font-size:11px; text-transform:uppercase; letter-spacing:2px;">
-        Progreso de Cultivo: <span style="color:#2dd4bf">Canal de Hígado Despierto</span>
+    <div style="background:rgba(15, 23, 42, 0.8); padding:10px; border-radius:10px; margin-top:10px;">
+        <p style="color:#2dd4bf; font-size:10px; text-align:left; line-height:1.4;">
+            <i class="fas fa-info-circle"></i> <b>Nota de Diseño:</b> Las líneas siguen los canales de los tejidos blandos. Se han ubicado los puntos 7 de cada meridiano justo proximal al pliegue de la muñeca, respetando la anatomía de superficie.
+        </p>
     </div>
-</div>
